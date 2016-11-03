@@ -1,0 +1,5 @@
+*.pyc
+__pycache__
+config.py
+lessons.sql
+.DS_Store
