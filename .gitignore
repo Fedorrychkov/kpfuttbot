@@ -1,5 +1,6 @@
 *.pyc
 __pycache__
+mysqlzaprosi
 config.py
 lessons.sql
 .DS_Store
