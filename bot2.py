@@ -24,6 +24,14 @@ print ("Номер дня: ", today)
 print ("Дата: ", datenow)
 group=4081
 
+def evod():
+	evod=0
+	if float(weeknumber)%2==0:
+		evod=2
+	else:
+		evod=1
+	return evod
+	
 #print (datetime.isoweekday("Today: "))
 """from telegram import Updater, Emoji, ParseMode
 import telegram
@@ -56,7 +64,7 @@ def handle_start_help(message):
 def handle_alltt(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=%s" % (group, today))
+	cur.execute("SELECT timelist, lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=%s and (evod=0 or evod=%d)" % (group, today,evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на сегодня:")
 	if result==[]:
@@ -71,7 +79,7 @@ def handle_alltt(message):
 def handle_alltt(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=%s" % (group, tommorow))
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=%s and (evod=0 or evod=%d)" % (group, tommorow,evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на завтра:")
 	if result==[]:
@@ -123,7 +131,7 @@ def connect():
 def handle_message(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=1" % group)
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=1 and (evod=0 or evod=%d)" % (group, evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на Понедельник:")
 	if result==[]:
@@ -139,7 +147,7 @@ def handle_message(message):
 def handle_message(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=2" % group)
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=2 and (evod=0 or evod=%d)" % (group, evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на Вторник:")
 	if result==[]:
@@ -155,7 +163,7 @@ def handle_message(message):
 def handle_message(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=3" % group)
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=3 and (evod=0 or evod=%d)" % (group, evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на Среду:")
 	if result==[]:
@@ -171,7 +179,7 @@ def handle_message(message):
 def handle_message(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=4" % group)
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=4 and (evod=0 or evod=%d)" % (group, evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на Четверг:")
 	if result==[]:
@@ -187,7 +195,7 @@ def handle_message(message):
 def handle_message(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=5" % group)
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=5 and (evod=0 or evod=%d)" % (group,evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на Пятницу:")
 	if result==[]:
@@ -203,7 +211,7 @@ def handle_message(message):
 def handle_message(message):
 	bot_reply=[]
 	#connect()
-	cur.execute("SELECT timetable.timelist, timetable.lessid,timetable.lesstype,timetable.room, alllessons.id,alllessons.lessname FROM timetable, alllessons  WHERE timetable.lessid=alllessons.id and timetable.GroupNum='%d' and timetable.DayNum=6"  % group)
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=6 and (evod=0 or evod=%d)" % (group,evod()))
 	result=cur.fetchall()
 	bot.send_message(message.chat.id, "Расписание на Субботу:")
 	if result==[]:
