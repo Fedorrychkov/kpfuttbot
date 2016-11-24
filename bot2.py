@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
-
+# Api key from Yandex App   c5878d39-cb96-4ab1-824b-e950a7548079
 import config
 import telebot
 from telebot import types
+import random
 #from mysqlconnector import connect
 
 import mysql.connector
 from mysql.connector import Error
-
 import datetime
 import time
+import botan
+
+
+random.seed()
 now = datetime.datetime.now()
 
 print ("Текущий день: %d" % now.day)
@@ -23,7 +27,6 @@ print ("Номер недели: ", weeknumber)
 print ("Номер дня: ", today)
 print ("Дата: ", datenow)
 group=4081
-
 def evod():
 	evod=0
 	if float(weeknumber)%2==0:
@@ -31,7 +34,9 @@ def evod():
 	else:
 		evod=1
 	return evod
-	
+
+
+
 #print (datetime.isoweekday("Today: "))
 """from telegram import Updater, Emoji, ParseMode
 import telegram
@@ -47,22 +52,91 @@ con = mysql.connector.connect(host='localhost',database='kpfubott',user='root',p
 cur=con.cursor()
 	
 
+
 #help_text = '8:30-10:00, Математический Анализ, 108 \n 10:10-11:40, Теория вероятности, 1008 \n 11:50-13:20, Математический Анализ, 903'
 welcome_text = 'Текст, который будет выводиться, когда юзер заходит в чат'
 #replylist=['ff']
 bot = telebot.TeleBot(config.token)
+
 
 @bot.message_handler(commands=['start', 'help'])
 def handle_start_help(message):
 	starttext ='''KPFU Time Table Bot предназначен для студентов Казанского Приволжского Федерального Университета. 
 	На данный момент KPFUttBot находится в альфа версии. Сейчас поддерживается только 1 институт, 1 факультет и 1 группа. 
 	09-408. \nСписок Команд:\n/today -вывод расписания на сегодня.\n/tommorow - вывод расписания на завтра.\n
-	/alltt - вывод расписания на всю неделю.\n/mysettings - команда для настройки вашего расписания. \n/allweek - вывод расписания по дням.'''
-	bot.send_message(message.chat.id, starttext)
+	/mysettings - команда для настройки вашего расписания. \n/allweek - вывод расписания по дням.'''
+	
 
+	bot.send_message(message.chat.id, starttext)
+	thisUsername=message.chat.username
+	thisChatID=message.chat.id
+		
+	"""bot_reply=''
+	cur.execute("SELECT UserID FROM users  WHERE UserID=%d" % thisChatID)
+	result=cur.fetchall()
+	if result==[]:
+		#newUser=bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
+		bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
+		register1(message)
+"""
+	register1(message)
+	botan.track(config.botan_key, message.chat.id, message, 'Нажато /start или /help')
+	return
+
+
+    
+#@bot.message_handler(commands=['new'])
+def register1(message):
+	markup = types.ReplyKeyboardMarkup()
+	bot_reply=''
+	cur.execute("SELECT InstID, InstName FROM institute")
+	result=cur.fetchall()
+	for row in result:
+		bot_reply+=str(row[0])+' '+str(row[1])+"\n"
+		print (bot_reply)
+		markup.row(str(row[1]))
+		
+	bot.send_message(message.chat.id, "Выберите свой институт из списка доступных: ", reply_markup=markup)
+	
+"""
+	keyboard = types.InlineKeyboardMarkup()
+	callback_button = types.InlineKeyboardButton(text="Нажми меня", callback_data="today")
+	keyboard.add(callback_button)
+	bot.send_message(message.chat.id, "Я – сообщение из обычного режима", reply_markup=keyboard)
+	print (callback_button)
+	thisUsername=message.chat.username
+	thisChatID=message.chat.id
+	"""
+
+#@bot.message_handler(commands=['settings'])
+#def handle_settings(message):
+#	return
+@bot.message_handler(commands=['fastset'])
+def get(message):
+	sent=bot.send_message(message.chat.id, "Введите номер своей группы вместе с подгруппой. Например: 409 или 4081 (группа 408, подгруппа 1)")
+	bot_reply=''
+	groups=message.text
+	bot.register_next_step_handler(sent, hello)
+
+def hello(message):
+    #bot.send_message(message.chat.id, 'Привет, {name}. Рад тебя видеть вновь!'.format(name=message.text))
+    global group
+    myg=message.text
+    group=int(myg)
+    print (myg)
+#	get_answer
+
+"""@bot.message_handler(func=lambda message: True, content_types=['text'])
+def get_answer(message):
+	global group
+	gr=message.text
+	group=gr
+	print (group)
+	#bot.send_message(message.chat.id, message.text)
+"""
 @bot.message_handler(commands=['today'])
-def handle_alltt(message):
-	bot_reply=[]
+def handle_today(message):
+	bot_reply=''
 	#connect()
 	cur.execute("SELECT timelist, lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=%s and (evod=0 or evod=%d)" % (group, today,evod()))
 	result=cur.fetchall()
@@ -71,13 +145,14 @@ def handle_alltt(message):
 		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
 	else:
 		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
+			bot_reply+="с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"
 			print (bot_reply)
 			bot.send_message(message.chat.id, bot_reply)
-
+	botan.track(config.botan_key, message.chat.id, message, 'Запрос расписания на "Сегодня"')
+	
 @bot.message_handler(commands=['tommorow'])
-def handle_alltt(message):
-	bot_reply=[]
+def handle_tommorow(message):
+	bot_reply=''
 	#connect()
 	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=%s and (evod=0 or evod=%d)" % (group, tommorow,evod()))
 	result=cur.fetchall()
@@ -86,33 +161,10 @@ def handle_alltt(message):
 		bot.send_message(message.chat.id, "Завтра у вас занятий нет!")	
 	else:
 		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
+			bot_reply+="с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"
 			print (bot_reply)
 			bot.send_message(message.chat.id, bot_reply)
-
-@bot.message_handler(commands=['mysettings'])
-def handle_start_help(message):
-	markup = types.ReplyKeyboardMarkup()
-	'''markup.row('Бизнес информатика', 'Прикладная математика и информатика')
-	markup.row('Прикладная математика','Програмная инженерия')
-	markup.row('Фундаментальная информатика и ИТ', 'Информационная безопасность')
-	markup.row('Прикладная информатика','Информационные системы и технологии')
-	bot.send_message(message.chat.id, "Выберите факультет:", reply_markup=markup)'''
-	markup.row('408.1','408.2')
-	bot.send_message(message.chat.id, "Выберите группу\подгруппу:", reply_markup=markup)
-
-@bot.message_handler(commands=['allweek'])
-def handle_start_help(message):
-	markup = types.ReplyKeyboardMarkup()
-	'''markup.row('Бизнес информатика', 'Прикладная математика и информатика')
-	markup.row('Прикладная математика','Програмная инженерия')
-	markup.row('Фундаментальная информатика и ИТ', 'Информационная безопасность')
-	markup.row('Прикладная информатика','Информационные системы и технологии')
-	bot.send_message(message.chat.id, "Выберите факультет:", reply_markup=markup)'''
-	markup.row('Понедельник','Вторник')
-	markup.row('Среда','Четверг')
-	markup.row('Пятница','Суббота')
-	bot.send_message(message.chat.id, "Выберите день который вы хотите проверить:", reply_markup=markup)
+	botan.track(config.botan_key, message.chat.id, message, 'Запрос расписания на "Завтра"')
 
 
 def connect():
@@ -124,133 +176,45 @@ def connect():
 	finally:
 		con.close()
 
+@bot.message_handler(commands=['allweek'])
+def handle_allweek(message):
+	markup = types.ReplyKeyboardMarkup()
+	markup.row('Понедельник','Вторник')
+	markup.row('Среда','Четверг')
+	markup.row('Пятница','Суббота')
+	print (message.text)
+	bot.send_message(message.chat.id, "Выберите день который вы хотите проверить:", reply_markup=markup)
+	botan.track(config.botan_key, message.chat.id, message, 'Запрос на всю неделю')
+	handle_days(message)
 
-
-
-@bot.message_handler(regexp="Понедельник")
-def handle_message(message):
-	bot_reply=[]
+@bot.message_handler(func=lambda message: True, content_types=['text'])
+def handle_days(message):
+	day_name=''
+	none_day=''
+	bot_reply=''
+	aint=message.text
+	
+	if aint=='Понедельник' or aint=='Вторник' or aint=='Среда' or aint=='Четверг' or aint=='Пятница' or aint=='Суббота':
+		day_name=message.text
+		none_day=''
+		print (message.text)
+	else:
+		day_name='... Ай, что то пошло не так:( '
 	#connect()
-	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=1 and (evod=0 or evod=%d)" % (group, evod()))
+	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod, DayName FROM timetable, alllessons, Days  WHERE lessid=alllessons.id and DayName='%s' and DayID=DayNum and GroupNum='%d' and (evod=0 or evod=%d)" % (day_name, group, evod()))
 	result=cur.fetchall()
-	bot.send_message(message.chat.id, "Расписание на Понедельник:")
+	bot.send_message(message.chat.id, "Расписание на %s" % day_name)
 	if result==[]:
-		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
+		bot.send_message(message.chat.id, "В этот день у вас занятий нет!")	
 	else:
 		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
+			bot_reply+="с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"
 			print (bot_reply)
-			bot.send_message(message.chat.id, bot_reply)
-
-
-@bot.message_handler(regexp="Вторник")
-def handle_message(message):
-	bot_reply=[]
-	#connect()
-	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=2 and (evod=0 or evod=%d)" % (group, evod()))
-	result=cur.fetchall()
-	bot.send_message(message.chat.id, "Расписание на Вторник:")
-	if result==[]:
-		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
-	else:
-		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
-			print (bot_reply)
-			bot.send_message(message.chat.id, bot_reply)
-
-
-@bot.message_handler(regexp="Среда")
-def handle_message(message):
-	bot_reply=[]
-	#connect()
-	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=3 and (evod=0 or evod=%d)" % (group, evod()))
-	result=cur.fetchall()
-	bot.send_message(message.chat.id, "Расписание на Среду:")
-	if result==[]:
-		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
-	else:
-		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
-			print (bot_reply)
-			bot.send_message(message.chat.id, bot_reply)
-
-
-@bot.message_handler(regexp="Четверг")
-def handle_message(message):
-	bot_reply=[]
-	#connect()
-	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=4 and (evod=0 or evod=%d)" % (group, evod()))
-	result=cur.fetchall()
-	bot.send_message(message.chat.id, "Расписание на Четверг:")
-	if result==[]:
-		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
-	else:
-		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
-			print (bot_reply)
-			bot.send_message(message.chat.id, bot_reply)
-
-
-@bot.message_handler(regexp="Пятница")
-def handle_message(message):
-	bot_reply=[]
-	#connect()
-	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=5 and (evod=0 or evod=%d)" % (group,evod()))
-	result=cur.fetchall()
-	bot.send_message(message.chat.id, "Расписание на Пятницу:")
-	if result==[]:
-		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
-	else:
-		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
-			print (bot_reply)
-			bot.send_message(message.chat.id, bot_reply)
-
-
-@bot.message_handler(regexp="Суббота")
-def handle_message(message):
-	bot_reply=[]
-	#connect()
-	cur.execute("SELECT timelist,lessid,lesstype,room, alllessons.id,lessname, Evod FROM timetable, alllessons  WHERE lessid=alllessons.id and GroupNum='%d' and DayNum=6 and (evod=0 or evod=%d)" % (group,evod()))
-	result=cur.fetchall()
-	bot.send_message(message.chat.id, "Расписание на Субботу:")
-	if result==[]:
-		bot.send_message(message.chat.id, "Сегодня у вас занятий нет!")	
-	else:
-		for row in result:
-			bot_reply=["с " +str(row[0])+' '+str(row[2])+' по "'+str(row[5])+'" в '+str(row[3])+"\n"]
-			print (bot_reply)
-			bot.send_message(message.chat.id, bot_reply)
-
-
-
+	bot.send_message(message.chat.id, bot_reply)
+	botan.track(config.botan_key, message.chat.id, message, 'Request TT from /allweek all type Dayname')
 
 errorf = 'kfubot находится на стадии альфа тестирования, в рабочем режиме находится только Фундаментальная информатика и информационные технологии'
 donee = "В разработке"
-@bot.message_handler(regexp="Бизнес информатика")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Прикладная математика и информатика")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Прикладная информатика")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Прикладная математика")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Програмная инженерия")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Информационная безопасность")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Информационные системы и технологии")
-def handle_message(message):
-		bot.send_message(message.chat.id, errorf)
-@bot.message_handler(regexp="Фундаментальная информатика и ИТ")
-def handle_message(message):
-		bot.send_message(message.chat.id, donee)
 
 
 if __name__ == '__main__':
