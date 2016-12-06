@@ -17,6 +17,7 @@ nameweek=''
 thisUsername=''
 thisChatID=0
 userInstitute=''
+userInstID=0
 regUser=True
 regInst=False
 regFac=False
@@ -86,7 +87,7 @@ def newuser(message):
 		register2(message)
 
 def register1(message):
-	global regUser, thisUsername, thisChatID, userInstitute, regInst
+	global regUser, thisUsername, thisChatID, userInstitute, regInst, userInstID
 	markup = types.ReplyKeyboardMarkup()
 	bot_reply=''
 	cur.execute("SELECT InstID, InstName FROM institute")
@@ -100,7 +101,12 @@ def register1(message):
 	print (userInstitute, "из Reg1")
 	if userInstitute[0]!='/':
 		bot.send_message(message.chat.id, userInstitute)
-		insertInst(message)
+		cur.execute("SELECT InstID, InstName FROM institute WHERE InstName='%s'" % userInstitute)
+		result2=cur.fetchall()
+		for row in result2:
+			userInstID=str(row[0])
+			print (userInstID + "UserinstID")	
+			insertInst(message)
 
 
 def register2(message):
@@ -109,10 +115,10 @@ def register2(message):
 
 	#insertto()
 
-def inserInst():
-	global regUser, thisUsername, thisChatID
-	bot.send_message(message.chat.id, userInstitute)
-	cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','09','1','3','4081')" % (thisChatID, thisUsername))
+def insertInst(message):
+	global regUser, thisUsername, thisChatID, userInstitute, FacID
+	bot.send_message(message.chat.id, userInstitute + "from instInst")
+	cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','%s','1','3','4081')" % (thisChatID, thisUsername, userInstID))
 	con.commit()
 #@bot.message_handler(commands=['settings'])
 #def handle_settings(message):
