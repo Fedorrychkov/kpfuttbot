@@ -18,6 +18,10 @@ thisUsername=''
 thisChatID=0
 userInstitute=''
 regUser=True
+regInst=False
+regFac=False
+regCourse=False
+regGroup=False
 
 def evod():
 	global today, weeknumber
@@ -46,7 +50,7 @@ cur=con.cursor()
 bot = telebot.TeleBot(config.token)
 @bot.message_handler(commands=['start', 'help'])
 def handle_start_help(message):
-	global regUser, thisUsername, thisChatID
+	global regUser, thisUsername, thisChatID, regInst, regFac, regCourse, regGroup
 	starttext ='''KPFU Time Table Bot предназначен для студентов Казанского Приволжского Федерального Университета. 
 	На данный момент KPFUttBot находится в альфа версии. Сейчас поддерживается только 1 институт, 1 факультет и 1 группа. 
 	09-408. \nСписок Команд:\n/today -вывод расписания на сегодня.\n/tommorow - вывод расписания на завтра.\n
@@ -61,6 +65,10 @@ def handle_start_help(message):
 	result=cur.fetchall()
 	if result==[]:
 		regUser=False
+		regInst=False
+		regFac=False
+		regCourse=False
+		regGroup=False
 		newuser(message)
 
 	botan.track(config.botan_key, message.chat.id, message, 'type /start or /help')
@@ -72,13 +80,15 @@ def handle_start_help(message):
 def newuser(message):
 	#newUser=bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
 	bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
-	register1(message)
+	if regInst==False:
+		register1(message)
+	elif regFac==False:
+		register2(message)
 
 def register1(message):
-	global regUser, thisUsername, thisChatID, userInstitute
+	global regUser, thisUsername, thisChatID, userInstitute, regInst
 	markup = types.ReplyKeyboardMarkup()
 	bot_reply=''
-	print (regUser)
 	cur.execute("SELECT InstID, InstName FROM institute")
 	result=cur.fetchall()
 	for row in result:
@@ -88,23 +98,25 @@ def register1(message):
 	bot.send_message(message.chat.id, "Выберите свой институт из списка доступных: ", reply_markup=markup)
 	userInstitute=message.text #написать обработчик и сравнивать данные из бд и тут.
 	print (userInstitute, "из Reg1")
-	if userInstitute[0]!='/start':
+	if userInstitute[0]!='/':
 		bot.send_message(message.chat.id, userInstitute)
-		insertto()
-		#cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','09','1','3','4081')" % (thisChatID, thisUsername))
-	
-	#insertto()
-def insertto():
+		insertInst(message)
+
+
+def register2(message):
 	global regUser, thisUsername, thisChatID
-	#bot.send_message(message.chat.id, userInstitute)
+	bot.send_message(message.chat.id, "Регистрация2")
+
+	#insertto()
+
+def inserInst():
+	global regUser, thisUsername, thisChatID
+	bot.send_message(message.chat.id, userInstitute)
 	cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','09','1','3','4081')" % (thisChatID, thisUsername))
 	con.commit()
 #@bot.message_handler(commands=['settings'])
 #def handle_settings(message):
 #	return
-def register2(message):
-	global regUser, thisUsername, thisChatID
-	bot.send_message(message.chat.id, "Регистрация2")
 @bot.message_handler(commands=['fastset'])
 def get(message):
 	sent=bot.send_message(message.chat.id, "Введите номер своей группы вместе с подгруппой. Например: 409 или 4081 (группа 408, подгруппа 1)")
@@ -147,7 +159,7 @@ def haveuser():
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def handle_words(message):
-	global regUser, thisUsernawme, thisChatID, userInstitute, group
+	global regUser, thisUsernawme, thisChatID, userInstitute, group, regInst, regFac, regCourse, regGroup
 	thisUsername=message.chat.username
 	thisChatID=message.chat.id
 	day_name=''
