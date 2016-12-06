@@ -88,9 +88,9 @@ def register1(message):
 	bot.send_message(message.chat.id, "Выберите свой институт из списка доступных: ", reply_markup=markup)
 	userInstitute=message.text #написать обработчик и сравнивать данные из бд и тут.
 	print (userInstitute, "из Reg1")
-	if userInstitute[0]!='/start':
+	if userInstitute[0]!='/':
 		bot.send_message(message.chat.id, userInstitute)
-		insertto()
+		#insertto()
 		#cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','09','1','3','4081')" % (thisChatID, thisUsername))
 	
 	#insertto()
