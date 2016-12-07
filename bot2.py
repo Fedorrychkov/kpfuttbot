@@ -17,7 +17,6 @@ nameweek=''
 thisUsername=''
 thisChatID=0
 userInstitute=''
-userInstID=0
 regUser=True
 regInst=False
 regFac=False
@@ -60,34 +59,63 @@ def handle_start_help(message):
 	bot.send_message(message.chat.id, starttext + "\nКстати, сейчас {name} ;)".format(name=nameweek()))
 	thisUsername=message.chat.username
 	thisChatID=message.chat.id
-		
-	bot_reply=''
-	cur.execute("SELECT UserID FROM users  WHERE UserID=%d" % thisChatID)
-	result=cur.fetchall()
-	if result==[]:
-		regUser=False
-		regInst=False
-		regFac=False
-		regCourse=False
-		regGroup=False
-		newuser(message)
-
+	haveuser(message)	
 	botan.track(config.botan_key, message.chat.id, message, 'type /start or /help')
 	return
 
+def haveuser(message):
+ 	bot_reply=''
+ 	cur.execute("SELECT UserID FROM users  WHERE UserID=%d" % message.chat.id)
+ 	result=cur.fetchall()
+ 	if result==[]:
+ 		regUser=False
+ 		regInst=False
+ 		regFac=False
+ 		regCourse=False
+ 		regGroup=False
+ 		bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
+ 		newuser(message)
+ 	else:
+ 		cur.execute("SELECT InstID FROM users  WHERE UserID=%d" % message.chat.id)
+ 		result1=cur.fetchall()
+ 		if result1==[]:
+ 			regInst=False
+ 			print ("CheckuserINST")
+ 		else:
+ 			regInst=True
+ 			print("We have INST")
 
-    
+ 		cur.execute("SELECT FacID FROM users  WHERE UserID=%d" % thisChatID)
+ 		result2=cur.fetchall()
+ 		if result2==[]:
+ 			regFac=False
+ 			print ("CheckuserFac")
+ 		else:
+ 			regFac=True
+ 			print("We have Fac")
+"""		
+		cur.execute("SELECT Course FROM users  WHERE UserID=%d" % thisChatID)
+		result3=cur.fetchall()
+		if result3==[]:
+
+		cur.execute("SELECT GroupID FROM users  WHERE UserID=%d" % thisChatID)
+		result4=cur.fetchall()
+		if result4==[]:
+"""  
 #@bot.message_handler(commands=['new'])
 def newuser(message):
-	#newUser=bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
-	bot.send_message(message.chat.id, "Добро пожаловать! Так как вы зашли первый раз вам придётся пройти небольшую процедуру настройки своего аккаунта!\nПриступим!")
+	global regUser, thisUsername, thisChatID, userInstitute,regInst, regFac, regCourse, regGroup
 	if regInst==False:
 		register1(message)
-	elif regFac==False:
+	"""elif regFac==False:
 		register2(message)
-
+	elif regCourse==False:
+		register3(message)
+	elif regGroup==False:
+		register4(message)
+	"""
 def register1(message):
-	global regUser, thisUsername, thisChatID, userInstitute, regInst, userInstID
+	global regUser, thisUsername, thisChatID, userInstitute, regInst
 	markup = types.ReplyKeyboardMarkup()
 	bot_reply=''
 	cur.execute("SELECT InstID, InstName FROM institute")
@@ -105,7 +133,7 @@ def register1(message):
 		result2=cur.fetchall()
 		for row in result2:
 			userInstID=str(row[0])
-			print (userInstID + "UserinstID")	
+			userInstitute=userInstID
 			insertInst(message)
 
 
@@ -113,12 +141,17 @@ def register2(message):
 	global regUser, thisUsername, thisChatID
 	bot.send_message(message.chat.id, "Регистрация2")
 
-	#insertto()
 
 def insertInst(message):
-	global regUser, thisUsername, thisChatID, userInstitute, FacID
+	global regUser, thisUsername, thisChatID, userInstitute,regInst, regFac, regCourse, regGroup
+
 	bot.send_message(message.chat.id, userInstitute + "from instInst")
-	cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','%s','1','3','4081')" % (thisChatID, thisUsername, userInstID))
+	if regInst!=True:
+		cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','%s','1','3','4081')" % (thisChatID, thisUsername, userInstitute))
+		regInst=True
+	#elif regFac!=True:
+		#cur.execute("INSERT into Users (UserID, Username, InstID, FacID, Course, GroupID) values ('%d', '%s','%s','1','3','4081')" % (thisChatID, thisUsername, userInstID))
+		#regFac=True
 	con.commit()
 #@bot.message_handler(commands=['settings'])
 #def handle_settings(message):
@@ -157,11 +190,7 @@ def handle_allweek(message):
 	botan.track(config.botan_key, message.chat.id, message, 'Type command /allweek')
 	handle_words(message)
 	
-def haveuser():
-	cur.execute("SELECT UserID FROM users  WHERE UserID=%d" % thisChatID)
-	result=cur.fetchall()
-	if regUser==True and result==[]:
-		return False
+
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def handle_words(message):
@@ -171,14 +200,13 @@ def handle_words(message):
 	day_name=''
 	none_day=''
 	bot_reply=''
-	print ("Нахожусь в handle_words", userInstitute)
-	#print (thisUsername) print (thisChatID)
+	print ("Нахожусь в handle_words")
 	aint=message.text
 	cur.execute("SELECT UserID, GroupID FROM users  WHERE UserID=%d" % thisChatID)
 	result=cur.fetchall()
 	for row in result:
 		group=str(row[1])
-	if regUser==True and result==[]:
+	if regUser==True and result!=[]:
 		if aint=='Понедельник' or aint=='Вторник' or aint=='Среда' or aint=='Четверг' or aint=='Пятница' or aint=='Суббота':
 			day_name=message.text
 			none_day=''
@@ -196,12 +224,11 @@ def handle_words(message):
 			bot.send_message(message.chat.id, "%s" % error_text)
 			handle_start_help(message)
 	else:
-		bot.send_message(message.chat.id, "Простите, но перед тем как получить список занятий, вам нужно настроить свой аккаунт - %d" % thisChatID)
+		bot.send_message(message.chat.id, "Простите, но перед тем как получить список занятий, вам нужно настроить свой аккаунт")
 #		if userInstitute=='/start':
 
 #		bot.send_message(message.chat.id, userInstitute)
-		
-		register1(message)
+		newuser(message)
 
 	#connect()
 
